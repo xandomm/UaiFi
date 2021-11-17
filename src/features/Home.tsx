@@ -1,20 +1,56 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, PermissionsAndroid, Button, Platform, TextInput, Alert } from "react-native";
-import { useNavigation } from '@react-navigation/native';
-import { DETAILS } from '../routes/RoutesName';
+import {
+  Text,
+  View,
+  PermissionsAndroid,
+  Button,
+  Platform,
+  TextInput,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import WifiManager from 'react-native-wifi-reborn';
 import Geolocation from '@react-native-community/geolocation';
+import ListItems from '../app/ListItems';
 
 function HomeScreen() {
-  const navigation = useNavigation();
-  const GoToDetails = () => {
-    navigation.navigate(DETAILS);
-  };
   const [local, setLocal] = useState<string>();
 
   const [currentLatitude, setCurrentLatitude] = useState('');
   const [currentLongitude, setCurrentLongitude] = useState('');
+  const [dBm, setdBm] = useState<any>();
+  const [data, setData] = useState<any[]>([]);
+  const [nivel, setNivel] = useState('');
   const [watchID, setWatchID] = useState(0);
+  console.log(nivel);
   console.log(local);
+
+  const GetRssid = async () => {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: 'Location permission is required for WiFi connections',
+        message:
+          'This app needs location permission as this is required  ' +
+          'to scan for wifi networks.',
+        buttonNegative: 'DENY',
+        buttonPositive: 'ALLOW',
+      }
+    );
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      WifiManager.getCurrentSignalStrength().then(
+        (ssid) => {
+          console.log('[SSID]' + ssid);
+          setdBm(ssid);
+        },
+        () => {
+          console.log('Cannot get current SSID!');
+        }
+      );
+    } else {
+      Alert.alert('Permissão de Localização negada');
+    }
+  };
   const callLocation = () => {
     if (Platform.OS === 'ios') {
       getLocation();
@@ -31,14 +67,45 @@ function HomeScreen() {
           }
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          GetRssid();
           getLocation();
+
+          if (dBm < -80) {
+            setNivel('inutilizável');
+          }
+          if (dBm >= -80 && dBm < -70) {
+            setNivel('fraco');
+          }
+
+          if (dBm >= -70 && dBm < -67) {
+            setNivel('Bom');
+          }
+          if (dBm >= -67 && dBm < -30) {
+            setNivel('Muito Bom');
+          }
+
+          if (dBm >= -30) {
+            setNivel('Excelente');
+          }
+          if (dBm) {
+            await setData([
+              ...data,
+              {
+                latitude: currentLatitude,
+                longitude: currentLongitude,
+                dbm: dBm,
+                localName: local,
+                nivel: nivel,
+              },
+            ]);
+          }
         } else {
           Alert.alert('Permissão de Localização negada');
         }
       };
       requestLocationPermission();
     }
-  };;
+  };
 
   const getLocation = () => {
     Geolocation.getCurrentPosition(
@@ -59,31 +126,31 @@ function HomeScreen() {
       setCurrentLongitude(currentLongitude);
     });
     setWatchID(watchID);
-  };;
-
-  const clearLocation = () => {
-    Geolocation.clearWatch(watchID);
-  };;
-
+  };
+  console.log(data);
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Digite aqui o nome do local o qual será realizado o registro</Text>
-      <TextInput
-        style={{
-          borderColor: 'black',
-          borderWidth: 0.5,
-          borderRadius: 8,
-          flex: 1,
-          maxHeight: 70,
-          minWidth: 200,
-          margin: 20,
-        }}
-        onChangeText={(e) => setLocal(e)}
-        value={local}
-      />
-      <Button title="Obter Localização" onPress={callLocation} />
-      <Button title="Pegar coordenadas" onPress={GoToDetails} />
-    </View>
+    <ScrollView>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text>
+          Digite aqui o nome do local o qual será realizado o registro
+        </Text>
+        <TextInput
+          style={{
+            borderColor: 'black',
+            borderWidth: 0.5,
+            borderRadius: 8,
+            flex: 1,
+            maxHeight: 70,
+            minWidth: 200,
+            margin: 20,
+          }}
+          onChangeText={(e) => setLocal(e)}
+          value={local}
+        />
+        <Button title="Obter Localização" onPress={callLocation} />
+      </View>
+      <ListItems List={data} />
+    </ScrollView>
   );
 }
 
