@@ -29,12 +29,11 @@ function HomeScreen() {
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       {
-        title: 'Location permission is required for WiFi connections',
-        message:
-          'This app needs location permission as this is required  ' +
-          'to scan for wifi networks.',
-        buttonNegative: 'DENY',
-        buttonPositive: 'ALLOW',
+        title: 'Permissão de Acesso à Localização',
+        message: 'Este aplicativo precisa acessar sua localização.',
+        buttonNeutral: 'Pergunte-me depois',
+        buttonNegative: 'Cancelar',
+        buttonPositive: 'OK',
       }
     );
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -88,16 +87,18 @@ function HomeScreen() {
             setNivel('Excelente');
           }
           if (dBm) {
-            await setData([
-              ...data,
-              {
-                latitude: currentLatitude,
-                longitude: currentLongitude,
-                dbm: dBm,
-                localName: local,
-                nivel: nivel,
-              },
-            ]);
+            if (nivel) {
+              await setData([
+                ...data,
+                {
+                  latitude: currentLatitude,
+                  longitude: currentLongitude,
+                  dbm: dBm,
+                  localName: local,
+                  nivel: nivel,
+                },
+              ]);
+            }
           }
         } else {
           Alert.alert('Permissão de Localização negada');
