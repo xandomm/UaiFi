@@ -12,9 +12,7 @@ target 'UaiFi' do
     :hermes_enabled => false
   )
 
-  pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
-  pod 'react-native-safe-area-context', :path => '../node_modules/react-native-safe-area-context'
 
   target 'UaiFiTests' do
     inherit! :complete

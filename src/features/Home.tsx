@@ -3,6 +3,7 @@ import {
   Text,
   View,
   PermissionsAndroid,
+  NativeModules,
   Button,
   Platform,
   TextInput,
@@ -21,10 +22,12 @@ function HomeScreen() {
   const [dBm, setdBm] = useState<any>();
   const [data, setData] = useState<any[]>([]);
   const [nivel, setNivel] = useState('');
-  const [watchID, setWatchID] = useState(0);
+  const [, setWatchID] = useState(0);
   console.log(nivel);
   console.log(local);
-
+  const { RNWifi, getWifiList } = NativeModules;
+  console.log(JSON.stringify(RNWifi));
+  console.log(JSON.stringify(getWifiList));
   const GetRssid = async () => {
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
