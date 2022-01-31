@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { ListItem, Text } from 'react-native-elements';
 
 type ListItems = {
@@ -33,7 +33,7 @@ export default ({ List }: Props) => {
               <Text>{item.localName}</Text>
             </View>
             <View>
-              <Text>dbm: {item.dbm}</Text>
+              {Platform.OS === 'android' ?? <Text>dbm: {item.dbm}</Text>}
             </View>
             <View>
               <Text>

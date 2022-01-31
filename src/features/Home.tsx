@@ -13,6 +13,7 @@ import {
 import WifiManager from 'react-native-wifi-reborn';
 import Geolocation from '@react-native-community/geolocation';
 import ListItems from '../app/ListItems';
+import deviceInfoModule from 'react-native-device-info';
 
 function HomeScreen() {
   const [local, setLocal] = useState<string>();
@@ -49,13 +50,48 @@ function HomeScreen() {
           console.log('Cannot get current SSID!');
         }
       );
+    }
+    if (Platform.OS === 'ios') {
+      setdBm(Math.random());
     } else {
       Alert.alert('Permissão de Localização negada');
     }
   };
+
   const callLocation = () => {
     if (Platform.OS === 'ios') {
+      // Aqui será inserido os dados sobre a o NEHospotNetwork fazendo a bridge com objective-c na pasta ios
+      setdBm(Math.random());
       getLocation();
+      if (dBm < 0.3) {
+        setNivel('inutilizável');
+      }
+      if (dBm >= 0.3 && dBm < 0.5) {
+        setNivel('fraco');
+      }
+
+      if (dBm >= 0.5 && dBm < 0.7) {
+        setNivel('Bom');
+      }
+      if (dBm >= 0.7 && dBm < 0.9) {
+        setNivel('Muito Bom');
+      }
+
+      if (dBm >= 0.9) {
+        setNivel('Excelente');
+      }
+      console.log(nivel);
+      if (nivel) {
+        setData([
+          ...data,
+          {
+            latitude: currentLatitude,
+            longitude: currentLongitude,
+            localName: local,
+            nivel: nivel,
+          },
+        ]);
+      }
     } else {
       const requestLocationPermission = async () => {
         const granted = await PermissionsAndroid.request(
@@ -68,45 +104,77 @@ function HomeScreen() {
             buttonPositive: 'OK',
           }
         );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          GetRssid();
-          getLocation();
+        if (Platform.OS === 'android') {
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            GetRssid();
+            getLocation();
 
-          if (dBm < -80) {
-            setNivel('inutilizável');
-          }
-          if (dBm >= -80 && dBm < -70) {
-            setNivel('fraco');
-          }
+            if (dBm < -80) {
+              setNivel('inutilizável');
+            }
+            if (dBm >= -80 && dBm < -70) {
+              setNivel('fraco');
+            }
 
-          if (dBm >= -70 && dBm < -67) {
-            setNivel('Bom');
-          }
-          if (dBm >= -67 && dBm < -30) {
-            setNivel('Muito Bom');
-          }
+            if (dBm >= -70 && dBm < -67) {
+              setNivel('Bom');
+            }
+            if (dBm >= -67 && dBm < -30) {
+              setNivel('Muito Bom');
+            }
 
-          if (dBm >= -30) {
-            setNivel('Excelente');
-          }
-          if (dBm) {
-            if (nivel) {
-              await setData([
-                ...data,
-                {
-                  latitude: currentLatitude,
-                  longitude: currentLongitude,
-                  dbm: dBm,
-                  localName: local,
-                  nivel: nivel,
-                },
-              ]);
+            if (dBm >= -30) {
+              setNivel('Excelente');
+            }
+            if (dBm) {
+              if (nivel) {
+                await setData([
+                  ...data,
+                  {
+                    latitude: currentLatitude,
+                    longitude: currentLongitude,
+                    dbm: dBm,
+                    localName: local,
+                    nivel: nivel,
+                  },
+                ]);
+              }
             }
           }
         } else {
-          Alert.alert('Permissão de Localização negada');
+          if (dBm < 0.3) {
+            setNivel('inutilizável');
+          }
+          if (dBm >= 0.3 && dBm < 0.5) {
+            setNivel('fraco');
+          }
+
+          if (dBm >= -0.5 && dBm < 0.7) {
+            setNivel('Bom');
+          }
+          if (dBm >= 0.7 && dBm < 0.9) {
+            setNivel('Muito Bom');
+          }
+
+          if (dBm >= 0.9) {
+            setNivel('Excelente');
+          }
+
+          if (nivel) {
+            await setData([
+              ...data,
+              {
+                latitude: currentLatitude,
+                longitude: currentLongitude,
+                dbm: dBm,
+                localName: local,
+                nivel: nivel,
+              },
+            ]);
+          }
         }
       };
+
       requestLocationPermission();
     }
   };
@@ -114,11 +182,16 @@ function HomeScreen() {
   const getLocation = () => {
     Geolocation.getCurrentPosition(
       (position) => {
-        const currentLatitude = JSON.stringify(position.coords.latitude);
-        const currentLongitude = JSON.stringify(position.coords.longitude);
-        setCurrentLatitude(currentLatitude);
-        setCurrentLongitude(currentLongitude);
-        console.log(currentLatitude, currentLongitude);
+        if (position) {
+          const currentLatitude = JSON.stringify(position.coords.latitude);
+          const currentLongitude = JSON.stringify(position.coords.longitude);
+          setCurrentLatitude(currentLatitude);
+          setCurrentLongitude(currentLongitude);
+          console.log(currentLatitude, currentLongitude);
+        } else {
+          const loc = NativeModules.SettingsManager.settings.AppleLocale();
+          console.log('rodo' + loc);
+        }
       },
       (error) => Alert.alert(error.message),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }

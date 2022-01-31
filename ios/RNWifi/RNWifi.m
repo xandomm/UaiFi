@@ -1,17 +1,12 @@
-//
-//  SinalStrenght.m
-//  UaiFi
-//
-//  Created by Alexandre on 24/01/22.
-//
-
-#include "SinalStrenght.h"
-#import "React/RCTBridge.h"
+#include "RNWifi.h"
+#import <React/RCTBridge.h>
 #import <NetworkExtension/NetworkExtension.h>
 
 @implementation RNWifi
 
 @synthesize bridge = _bridge;
+
+RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(getWifiList:(RCTResponseSenderBlock)callback) {
     NSMutableArray* result = [NSMutableArray new];
@@ -21,9 +16,10 @@ RCT_EXPORT_METHOD(getWifiList:(RCTResponseSenderBlock)callback) {
         hotspot[@"BSSID"] = hotspotNetwork.BSSID;
         hotspot[@"isSecure"] = @(hotspotNetwork.secure);
         hotspot[@"level"] = @(hotspotNetwork.signalStrength);
+        hotspot[@"frequency"] = @(hotspotNetwork.frequency);
         [result addObject:hotspot];
     }
     return callback(@[[NSNull null], result]);
 }
-RCT_EXPORT_MODULE();
+
 @end
